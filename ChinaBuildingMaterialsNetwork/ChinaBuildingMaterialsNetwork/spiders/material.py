@@ -196,6 +196,22 @@ class MaterialSpider(scrapy.Spider):
                             item['image_urls'].append(image_original_url)
                         yield item
 
+        is_trading_certificate = response.xpath('//div[@class="m-certificate"]')
+        if is_trading_certificate:
+            product['detail_information']['trading_certificate'] = []
+            certificate_photo_list = response.xpath('//div[@class="m-certificate"]//img/@src').extract()
+            if certificate_photo_list:
+                item = ImageItem()
+                item['image_urls'] = []
+                for photo in certificate_photo_list:
+                    certificate_original = photo
+                    certificate_local = 'E:/images' + photo.split('com')[-1]
+                    image_detailed_url = {'image_original_url': certificate_original,
+                                          'image_local_url': certificate_local}
+                    product['detail_information']['trading_certificate'].append(image_detailed_url)
+                    item['image_urls'].append(certificate_original)
+                yield item
+
         product_item = ProductItem()
         for field in product_item.fields:
             if field in product.keys():
