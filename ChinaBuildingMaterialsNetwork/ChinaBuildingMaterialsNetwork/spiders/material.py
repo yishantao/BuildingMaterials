@@ -4,7 +4,7 @@ import scrapy
 
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
-from ChinaBuildingMaterialsNetwork.items import ProductItem
+from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem
 
 
 class MaterialSpider(scrapy.Spider):
@@ -70,9 +70,6 @@ class MaterialSpider(scrapy.Spider):
                 yield Request(link.url, callback=self.parse_product)
 
     def parse_product(self, response):
-        # 起订量 = response.xpath('//div[@class="sellinfo"]/dl/dd/p[@class="order"]/text()').extract_first()
-        # 价格 = response.xpath('//div[@class="sellinfo"]/dl/dd/p[@class="price"]/text()').extract_first()
-        # 最小起订量 = response.xpath('//div[@class="sellinfo"]/ul/li[1]/text()').extract_first()
         product = {}
         category_one = response.xpath('//div[@id="location"]/a[3]/text()').extract_first()
         if category_one:
@@ -83,11 +80,110 @@ class MaterialSpider(scrapy.Spider):
         category_three = response.xpath('//div[@id="location"]/a[5]/text()').extract_first()
         if category_three:
             product['category_three'] = category_three
-        item = ProductItem()
-        for field in item.fields:
+
+        product['basic_information'] = {}
+        product_name = response.xpath('//div[@class="sellinfo"]/h1/text()').extract_first()
+        if product_name:
+            product['basic_information']['product_name'] = product_name
+            product['product_name'] = product_name
+
+        product['basic_information']['prices_quantity'] = []
+        dd_list = response.xpath('//div[@class="sellinfo"]/dl/dd')
+        for dd in dd_list:
+            dd_dict = {}
+            price = dd.xpath('./p[@class="price"]/text()').extract_first()
+            if price:
+                dd_dict['price'] = price
+            else:
+                price = dd.xpath('./p[@class="price dy"]/text()').extract_first()
+                if price:
+                    dd_dict['price'] = price
+            minimum_quantity = dd.xpath('./p[@class="order"]/text()').extract_first()
+            if minimum_quantity:
+                dd_dict['minimum_quantity'] = minimum_quantity
+            if dd_dict:
+                product['basic_information']['prices_quantity'].append(dd_dict)
+
+        # price = response.xpath('//div[@class="sellinfo"]/dl/dd/p[@class="price"]/text()').extract_first()
+        # if price:
+        #     product['basic_information']['price'] = price
+        # minimum_quantity = response.xpath('//div[@class="sellinfo"]/dl/dd/p[@class="order"]/text()').extract_first()
+        # if minimum_quantity:
+        #     product['basic_information']['minimum_quantity'] = minimum_quantity
+        minimum_order_quantity = response.xpath('//div[@class="sellinfo"]/ul/li[1]/text()').extract_first()
+        if minimum_order_quantity:
+            product['basic_information']['minimum_order_quantity'] = minimum_order_quantity
+        location = response.xpath('//div[@class="sellinfo"]/ul/li[2]/text()').extract_first()
+        if location:
+            product['basic_information']['location'] = location
+        total_supply = response.xpath('//div[@class="sellinfo"]/ul/li[4]/text()').extract_first()
+        if total_supply:
+            product['basic_information']['total_supply'] = total_supply
+        delivery_date = response.xpath('//div[@class="sellinfo"]/ul/li[5]/text()').extract_first()
+        if delivery_date:
+            product['basic_information']['delivery_date'] = delivery_date
+        release_time = response.xpath('//div[@class="sellinfo"]/ul/li[6]/text()').extract_first()
+        if release_time:
+            product['basic_information']['release_time'] = release_time
+        contact = response.xpath('//div[@class="sellinfo"]/p/b/text()').extract_first()
+        if contact:
+            product['basic_information']['contact'] = contact
+
+        product['basic_information']['big_photos'] = []
+        big_photos_list = response.xpath('//div[@class="m-productTab"]/div[@class="m-bd"]/ul//img/@src').extract()
+        if big_photos_list:
+            item = ImageItem()
+            item['image_urls'] = []
+            for photo in big_photos_list:
+                original_url = photo
+                local_url = 'E:/images' + photo.split('com')[-1]
+                image_detailed_url = {'original_url': original_url,
+                                      'local_url': local_url}
+                product['basic_information']['big_photos'].append(image_detailed_url)
+                item['image_urls'].append(original_url)
+            yield item
+
+        product['detail_information'] = {}
+        is_product_parameters = response.xpath('//div[@class="m-productInfo"]/ul')
+        if is_product_parameters:
+            product['detail_information']['product_parameters'] = {}
+            parameters_number = len(response.xpath('//div[@class="m-productInfo"]/ul/li').extract())
+            if parameters_number != 0:
+                for parameter in range(1, parameters_number + 1):
+                    type_xpath = '//div[@class="m-productInfo"]/ul/li[{number}]/p[@class="type"]/text()'
+                    parameter_key = response.xpath(type_xpath.format(number=parameter)).extract_first()
+                    info_xpath = '//div[@class="m-productInfo"]/ul/li[{number}]/p[@class="info"]/text()'
+                    parameter_value = response.xpath(info_xpath.format(number=parameter)).extract_first()
+                    if parameter_key and parameter_value:
+                        product['detail_information']['product_parameters'][parameter_key] = parameter_value
+
+        is_detailed_description = response.xpath('//div[@class="m-productInfo"]/div[@class="detail"]')
+        if is_detailed_description:
+            product['detail_information']['detailed_description'] = []
+            p_numbers = len(response.xpath('//div[@class="m-productInfo"]/div[@class="detail"]/p').extract())
+            if p_numbers:
+                for p in range(1, p_numbers + 1):
+                    p_text_xpath = 'string(//div[@class="m-productInfo"]/div[@class="detail"]/p[{number}])'
+                    p_text = response.xpath(p_text_xpath.format(number=p)).extract_first().strip()
+                    if p_text:
+                        product['detail_information']['detailed_description'].append(p_text)
+                    p_image_xpath = '//div[@class="m-productInfo"]/div[@class="detail"]/p[{number}]/img/@src'
+                    image_list = response.xpath(p_image_xpath.format(number=p)).extract()
+                    if image_list:
+                        item = ImageItem()
+                        item['image_urls'] = []
+                        image_number = len(image_list)
+                        for image in range(0, image_number):
+                            image_original_url = image_list[image]
+                            image_local_url = 'E:/images' + image_original_url.split('com')[-1]
+                            image_detailed_url = {'image_original_url': image_original_url,
+                                                  'image_local_url': image_local_url}
+                            product['detail_information']['detailed_description'].append(image_detailed_url)
+                            item['image_urls'].append(image_original_url)
+                        yield item
+
+        product_item = ProductItem()
+        for field in product_item.fields:
             if field in product.keys():
-                item[field] = product.get(field)
-        
-
-        # item['product_name'] = response.xpath('//div[@class="sellinfo"]/h1/text()').extract_first()
-
+                product_item[field] = product.get(field)
+        yield product_item
