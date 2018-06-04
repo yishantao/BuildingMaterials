@@ -63,10 +63,14 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#    'ChinaBuildingMaterialsNetwork.pipelines.ChinabuildingmaterialsnetworkPipeline': 300,
-# }
+ITEM_PIPELINES = {
+    # 'ChinaBuildingMaterialsNetwork.pipelines.ChinabuildingmaterialsnetworkPipeline': 300,
+    'ChinaBuildingMaterialsNetwork.pipelines.ImagePipeline': 800,
+    'ChinaBuildingMaterialsNetwork.pipelines.MongoPipeline': 300,
+}
 
+IMAGES_STORE = 'E:\images'
+IMAGES_EXPIRES = 30
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
 # AUTOTHROTTLE_ENABLED = True

@@ -7,6 +7,11 @@
 
 import pymongo
 
+from scrapy import Request
+from scrapy.exceptions import DropItem
+from scrapy.pipelines.images import ImagesPipeline
+from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem
+
 
 class ChinabuildingmaterialsnetworkPipeline(object):
     def process_item(self, item, spider):
@@ -14,7 +19,7 @@ class ChinabuildingmaterialsnetworkPipeline(object):
 
 
 class MongoPipeline(object):
-    collection_name = 'users'
+    collection_name = 'materials'
 
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_uri = mongo_uri
@@ -36,6 +41,29 @@ class MongoPipeline(object):
 
     def process_item(self, item, spider):
         # True表示如果没有更新就插入
-        if 'url_token' in item.keys():
-            self.db[self.collection_name].update({'url_token': item['url_token']}, {'$set': dict(item)}, True)
+        if isinstance(item, ProductItem):
+            if 'product_name' in item.keys():
+                self.db[self.collection_name].update({'product_name': item['product_name']}, {'$set': dict(item)}, True)
+                return item
+        return item
+
+
+class ImagePipeline(ImagesPipeline):
+    def file_path(self, request, response=None, info=None):
+        url = request.url
+        file_name = url.split('com')[-1]
+        return file_name
+
+    def item_completed(self, results, item, info):
+        if isinstance(item, ImageItem):
+            image_paths = [x['path'] for ok, x in results if ok]
+            if not image_paths:
+                raise DropItem('Image Downloaded Failed')
+            item['image_paths'] = image_paths
             return item
+        return item
+
+    def get_media_requests(self, item, info):
+        if isinstance(item, ImageItem):
+            for image_url in item['image_urls']:
+                yield Request(image_url)
