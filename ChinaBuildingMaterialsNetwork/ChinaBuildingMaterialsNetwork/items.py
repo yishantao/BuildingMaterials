@@ -23,6 +23,13 @@ class ProductItem(Item):
     detail_information = Field()
 
 
+class CompanyItem(Item):
+    company_name = Field()
+    company_profile = Field()
+    recruitment = Field()
+    contact = Field()
+
+
 class ImageItem(Item):
     image_urls = Field()
     images = Field()

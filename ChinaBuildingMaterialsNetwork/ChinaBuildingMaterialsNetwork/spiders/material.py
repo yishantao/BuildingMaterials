@@ -4,7 +4,7 @@ import scrapy
 
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
-from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem
+from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem, CompanyItem
 
 
 class MaterialSpider(scrapy.Spider):
@@ -226,6 +226,7 @@ class MaterialSpider(scrapy.Spider):
 
     def parse_company(self, response):
         company = {}
+        company['company_name'] = response.xpath('//div[@class="head-product"]/h2/text()').extract_first()
         company['company_profile'] = {}
         is_photos = response.xpath('//div[@class="m-tab4"]/div[@class="m-bd"]/ul')
         if is_photos:
@@ -279,3 +280,9 @@ class MaterialSpider(scrapy.Spider):
                 p_value = li.xpath('./p[@class="info"]//text()').extract_first()
                 if p_key and p_value:
                     company['company_profile']['detail_information'][p_key] = p_value
+
+        item = CompanyItem()
+        for field in item.fields:
+            if field in company.keys():
+                item[field] = company.get(field)
+        yield item
