@@ -225,4 +225,34 @@ class MaterialSpider(scrapy.Spider):
                 yield Request(link.url, callback=self.parse_company)
 
     def parse_company(self, response):
-        pass
+        company = {}
+        company['company_profile'] = {}
+        is_photos = response.xpath('//div[@class="m-tab4"]/div[@class="m-bd"]/ul')
+        if is_photos:
+            company['company_profile']['big_photos'] = []
+            company['company_profile']['small_photos'] = []
+            big_photos_list = response.xpath('//div[@class="m-tab4"]/div[@class="m-bd"]/ul//img/@src').extract()
+            if big_photos_list:
+                item = ImageItem()
+                item['image_urls'] = []
+                for photo in big_photos_list:
+                    original_url = photo
+                    local_url = 'E:/images' + photo.split('com')[-1]
+                    image_detailed_url = {'original_url': original_url,
+                                          'local_url': local_url}
+                    company['company_profile']['big_photos'].append(image_detailed_url)
+                    item['image_urls'].append(original_url)
+            small_photos_list = response.xpath('//div[@class="m-tab4"]/ul[@class="m-hd"]/li//img/@src').extract()
+            if small_photos_list:
+                item = ImageItem()
+                item['image_urls'] = []
+                for photo in small_photos_list:
+                    original_url = photo
+                    local_url = 'E:/images' + photo.split('com')[-1]
+                    image_detailed_url = {'original_url': original_url,
+                                          'local_url': local_url}
+                    company['company_profile']['small_photos'].append(image_detailed_url)
+                    item['image_urls'].append(original_url)
+        company['company_profile']['introduction'] = []
+        
+
