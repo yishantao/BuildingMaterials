@@ -18,6 +18,12 @@ class ProductItem(Item):
     product_name = Field()
     category_one = Field()
     category_two = Field()
-    category_third = Field()
-    product_base_info = Field()
-    product_detail_info = Field()
+    category_three = Field()
+    basic_information = Field()
+    detail_information = Field()
+
+
+class ImageItem(Item):
+    image_urls = Field()
+    images = Field()
+    image_paths = Field()
