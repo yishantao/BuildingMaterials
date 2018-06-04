@@ -254,5 +254,28 @@ class MaterialSpider(scrapy.Spider):
                     company['company_profile']['small_photos'].append(image_detailed_url)
                     item['image_urls'].append(original_url)
         company['company_profile']['introduction'] = []
-        
-
+        p_list = response.xpath('//div[@class="detail"]/p//text()').extract()
+        if p_list:
+            for p in p_list:
+                if p.strip():
+                    company['company_profile']['introduction'].append(p)
+        else:
+            p = response.xpath('//div[@class="detail"]//text()').extract_first().strip()
+            if p:
+                company['company_profile']['introduction'].append(p)
+        company['company_profile']['basic_information'] = {}
+        li_list = response.xpath('//div[@class="m-companyInfo"]/div[4]//li')
+        if li_list:
+            for li in li_list:
+                p_key = li.xpath('./p[@class="type"]//text()').extract_first()
+                p_value = li.xpath('./p[@class="info"]//text()').extract_first()
+                if p_key and p_value:
+                    company['company_profile']['basic_information'][p_key] = p_value
+        company['company_profile']['detail_information'] = {}
+        li_list = response.xpath('//div[@class="m-companyInfo"]/div[5]//li')
+        if li_list:
+            for li in li_list:
+                p_key = li.xpath('./p[@class="type"]//text()').extract_first()
+                p_value = li.xpath('./p[@class="info"]//text()').extract_first()
+                if p_key and p_value:
+                    company['company_profile']['detail_information'][p_key] = p_value
