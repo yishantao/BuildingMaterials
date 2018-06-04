@@ -143,6 +143,20 @@ class MaterialSpider(scrapy.Spider):
                 item['image_urls'].append(original_url)
             yield item
 
+        product['basic_information']['small_photos'] = []
+        small_photos_list = response.xpath('//div[@class="m-productTab"]/ul[@class="m-hd"]//img/@src').extract()
+        if small_photos_list:
+            item = ImageItem()
+            item['image_urls'] = []
+            for photo in small_photos_list:
+                original_url = photo
+                local_url = 'E:/images' + photo.split('com')[-1]
+                image_detailed_url = {'original_url': original_url,
+                                      'local_url': local_url}
+                product['basic_information']['small_photos'].append(image_detailed_url)
+                item['image_urls'].append(original_url)
+            yield item
+
         product['detail_information'] = {}
         is_product_parameters = response.xpath('//div[@class="m-productInfo"]/ul')
         if is_product_parameters:
