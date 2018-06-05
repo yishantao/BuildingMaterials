@@ -10,7 +10,7 @@ import pymongo
 from scrapy import Request
 from scrapy.exceptions import DropItem
 from scrapy.pipelines.images import ImagesPipeline
-from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem
+from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem, CompanyItem
 
 
 class ChinabuildingmaterialsnetworkPipeline(object):
@@ -19,7 +19,8 @@ class ChinabuildingmaterialsnetworkPipeline(object):
 
 
 class MongoPipeline(object):
-    collection_name = 'materials'
+    collection_name_product = 'product'
+    collection_name_company = 'company'
 
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_uri = mongo_uri
@@ -43,7 +44,13 @@ class MongoPipeline(object):
         # True表示如果没有更新就插入
         if isinstance(item, ProductItem):
             if 'product_name' in item.keys():
-                self.db[self.collection_name].update({'product_name': item['product_name']}, {'$set': dict(item)}, True)
+                self.db[self.collection_name_product].update({'product_name': item['product_name']},
+                                                             {'$set': dict(item)}, True)
+                return item
+        elif isinstance(item, CompanyItem):
+            if 'company_name' in item.keys():
+                self.db[self.collection_name_company].update({'company_name': item['company_name']},
+                                                             {'$set': dict(item)}, True)
                 return item
         return item
 
