@@ -20,7 +20,7 @@ class MaterialSpider(scrapy.Spider):
         return Request(url, dont_filter=True)
 
     def parse(self, response):
-        le = LinkExtractor(restrict_xpaths='//div[@class="sContentD"]/div[1]//a[position()>1 and position()<3]')
+        le = LinkExtractor(restrict_xpaths='//div[@class="sContentD"]/div[1]//a[position()>1]')
         links = le.extract_links(response)
         if links:
             for link in links:
@@ -40,7 +40,7 @@ class MaterialSpider(scrapy.Spider):
     def parse_category_two(self, response):
         is_category = response.xpath('//div[@class="sContentD"]/div[1]/h3[contains(text(),"类目")]').extract()
         if is_category:
-            le = LinkExtractor(restrict_xpaths='//div[@class="sContentD"]/div[1]//a[position()>1 and position()<3]')
+            le = LinkExtractor(restrict_xpaths='//div[@class="sContentD"]/div[1]//a[position()>1]')
             links = le.extract_links(response)
             if links:
                 for link in links:
