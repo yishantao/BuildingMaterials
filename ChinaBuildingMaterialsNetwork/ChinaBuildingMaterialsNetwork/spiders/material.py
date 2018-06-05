@@ -225,9 +225,8 @@ class MaterialSpider(scrapy.Spider):
                 yield Request(link.url, callback=self.parse_company)
 
     def parse_company(self, response):
-        company = {}
-        company['company_name'] = response.xpath('//div[@class="head-product"]/h2/text()').extract_first()
-        company['company_profile'] = {}
+        company = {'company_name': response.xpath('//div[@class="head-product"]/h2/text()').extract_first(),
+                   'company_profile': {}}
         is_photos = response.xpath('//div[@class="m-tab4"]/div[@class="m-bd"]/ul')
         if is_photos:
             company['company_profile']['big_photos'] = []
@@ -286,3 +285,35 @@ class MaterialSpider(scrapy.Spider):
             if field in company.keys():
                 item[field] = company.get(field)
         yield item
+
+        le = LinkExtractor(restrict_xpaths='//li[@id="nav-contact"]/a')
+        links = le.extract_links(response)
+        if links:
+            for link in links:
+                yield Request(link.url, callback=self.parse_contact)
+
+    def parse_contact(self, response):
+        card = response.xpath('//div[@class="card"]')
+        if card:
+            company = {'company_name': response.xpath('//div[@class="head-product"]/h2/text()').extract_first(),
+                       'contact': {}}
+            link_man = card.xpath('./div[@class="cardName"]/h3/text()').extract_first()
+            if link_man:
+                company['contact']['link_man'] = link_man
+            position = card.xpath('./div[@class="cardName"]/h3/em/text()').extract_first()
+            if position:
+                company['contact']['position'] = position
+            dd_dt_list = card.xpath('./dl[@class="cardInfo"]/*/text()').extract()
+            if dd_dt_list:
+                for dd in dd_dt_list:
+                    dd = dd.split('：')
+                    if len(dd) == 2:
+                        key = dd[0]
+                        value = dd[1]
+                        company['contact'][key] = value
+
+            item = CompanyItem()
+            for field in item.fields:
+                if field in company.keys():
+                    item[field] = company.get(field)
+            yield item
