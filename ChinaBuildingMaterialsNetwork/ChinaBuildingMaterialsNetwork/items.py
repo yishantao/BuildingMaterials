@@ -16,6 +16,7 @@ class ChinabuildingmaterialsnetworkItem(Item):
 
 class ProductItem(Item):
     product_name = Field()
+    company = Field()
     category_one = Field()
     category_two = Field()
     category_three = Field()
@@ -24,10 +25,16 @@ class ProductItem(Item):
 
 
 class CompanyItem(Item):
+    _id = Field()
     company_name = Field()
     company_profile = Field()
     recruitment = Field()
     contact = Field()
+
+
+class CompanyIdItem(Item):
+    _id = Field()
+    # company_name = Field()
 
 
 class ImageItem(Item):

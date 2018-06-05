@@ -10,7 +10,7 @@ import pymongo
 from scrapy import Request
 from scrapy.exceptions import DropItem
 from scrapy.pipelines.images import ImagesPipeline
-from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem, CompanyItem
+from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem, CompanyItem, CompanyIdItem
 
 
 class ChinabuildingmaterialsnetworkPipeline(object):
@@ -48,11 +48,16 @@ class MongoPipeline(object):
                                                              {'$set': dict(item)}, True)
                 return item
         elif isinstance(item, CompanyItem):
-            if 'company_name' in item.keys():
-                self.db[self.collection_name_company].update({'company_name': item['company_name']},
+            if '_id' in item.keys():
+                self.db[self.collection_name_company].update({'_id': item['_id']},
                                                              {'$set': dict(item)}, True)
                 return item
-        return item
+        elif isinstance(item, CompanyIdItem):
+            if '_id' in item.keys():
+                self.db[self.collection_name_company].insert_one(dict(item))
+                return item
+        else:
+            return item
 
 
 class ImagePipeline(ImagesPipeline):
