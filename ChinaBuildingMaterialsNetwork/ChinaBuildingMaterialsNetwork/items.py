@@ -29,6 +29,7 @@ class CompanyItem(Item):
     company_name = Field()
     company_profile = Field()
     recruitment = Field()
+    news = Field()
     contact = Field()
 
 
