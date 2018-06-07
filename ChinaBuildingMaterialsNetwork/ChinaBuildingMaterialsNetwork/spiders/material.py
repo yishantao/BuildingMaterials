@@ -7,10 +7,6 @@ from scrapy.linkextractors import LinkExtractor
 from ChinaBuildingMaterialsNetwork.items import ProductItem, ImageItem, CompanyItem, CompanyIdItem
 
 
-# from multiprocessing import Pool, Manager
-#
-# def wrap(worker, msg):
-#     worker.crawlerr(msg)
 class MaterialSpider(scrapy.Spider):
     name = 'material'
     allowed_domains = ['www.bmlink.com']
@@ -23,31 +19,12 @@ class MaterialSpider(scrapy.Spider):
     def make_requests_from_url(self, url):
         return Request(url, dont_filter=True)
 
-    # def crawlerr(self, q):
-    #     while not q.empty():
-    #         url = q.get(timeout=2)
-    #         try:
-    #             yield Request(url, callback=self.parse_category_one)
-    #         except Exception as e:
-    #             print('error')
-
     def parse(self, response):
         le = LinkExtractor(restrict_xpaths='//div[@class="sContentD"]/div[1]//a[position()>1]')
         links = le.extract_links(response)
         if links:
             for link in links:
                 yield Request(link.url, callback=self.parse_category_one)
-        # manager = Manager()
-        # work_queue = manager.Queue(25)
-        # if links:
-        #     for link in links:
-        #         work_queue.put(link.url)
-        #
-        # pool = Pool(processes=3)
-        # for i in range(4):
-        #     pool.apply_async(wrap, args=(MaterialSpider(),work_queue))
-        # pool.close()
-        # pool.join()
 
     def parse_category_one(self, response):
         is_category = response.xpath('//div[@class="sContentD"]/div[1]/h3[contains(text(),"类目")]').extract()
