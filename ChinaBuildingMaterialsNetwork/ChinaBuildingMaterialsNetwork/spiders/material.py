@@ -20,7 +20,8 @@ class MaterialSpider(scrapy.Spider):
         return Request(url, dont_filter=True)
 
     def parse(self, response):
-        le = LinkExtractor(restrict_xpaths='//div[@class="sContentD"]/div[1]//a[position()>1]')
+        le = LinkExtractor(
+            restrict_xpaths='//div[@class="sContentD"]/div[1]//a[position()>1 and not(@title="机械设备") and not(@title="砌筑材料")]')
         links = le.extract_links(response)
         if links:
             for link in links:
@@ -331,6 +332,8 @@ class MaterialSpider(scrapy.Spider):
         if total_page:
             total_page = total_page.strip()[1:]
             total_page = int(total_page)
+            # 由于新闻页数量太多，这里应公司要求先知爬取一页新闻；爬取全部新闻请删除下面一句代码
+            total_page = 1
             for page in range(1, total_page + 1):
                 url = response.url + '?page=' + str(page)
                 yield Request(url, callback=self.parse_news_page)
