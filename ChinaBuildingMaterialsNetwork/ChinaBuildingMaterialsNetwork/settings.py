@@ -94,3 +94,5 @@ IMAGES_EXPIRES = 30
 
 MONGO_URI = 'localhost'
 MONGO_DATABASE = 'ChinaBuildingMaterialsNetwork'
+
+
